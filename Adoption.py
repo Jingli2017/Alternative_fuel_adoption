@@ -12,6 +12,17 @@ CAPEX_ME = 950  # CAPEX Methanol engine 950 $/KW
 CAPEX_H2 = 5300  # CAPEX Hydrogen fuel cell 5300 $/KW
 CAPEX_Bd = CAPEX_ICE*1.05 # 5% more expensive than ICE engine price
 
+# CAPEX discount to %
+dis_LNG_2030 = 0.75
+dis_Me_2030 = 0.75
+dis_H2_2030 = 0.75
+dis_Bd_2030 = 1
+
+dis_LNG_2050 = 0.75
+dis_Me_2050 = 0.75
+dis_H2_2050 = 0.4
+dis_Bd_2050 = 1
+
 # fuel price
 LSFO_price_2030 = 716  # Robin Meech 2030
 LNG_price_2030 = 548  # Global
@@ -32,8 +43,12 @@ other_num = 15267  # other ship types number
 
 # expected payback year after discount
 payback_5 = 3.493862268
+
+# MBM
+carbon_price = 1.1
 percent_revenue = 0.15  # offset percent of total revenue
 offset_price = 10.23  # $/ton
+
 
 # define the NPV function
 def NPV(con, aprice, capex, dis, bprice=LSFO_price_2030, c=1.0):
@@ -50,10 +65,10 @@ def energy_con(con_base=0, con_lng=0, con_bd=0, con_h2=0, con_me=0, bncv=40.5):
     return energy, main_output
 
 
-df['NPV_LNG_2030'] = NPV(con=df['consumption_LNG_(tonnes)'], aprice=LNG_price_2030, capex=CAPEX_LNG, dis=0.75)[0]
-df['NPV_Me_2030'] = NPV(con=df['consumption_Methanol_(tonnes)'], aprice=Me_price_2030, capex=CAPEX_ME, dis=0.75)[0]
-df['NPV_Bd_2030'] = NPV(con=df['consumption_Biodiesel_(tonnes)'], aprice=Bd_price_2030, capex=CAPEX_Bd, dis=1)[0]
-df['NPV_H2_2030'] = NPV(con=df['consumption_Hydrogen_(tonnes)'], aprice=H2_price_2030, capex=CAPEX_H2, dis=0.75)[0]
+df['NPV_LNG_2030'] = NPV(con=df['consumption_LNG_(tonnes)'], aprice=LNG_price_2030, capex=CAPEX_LNG, dis=dis_LNG_2030)[0]
+df['NPV_Me_2030'] = NPV(con=df['consumption_Methanol_(tonnes)'], aprice=Me_price_2030, capex=CAPEX_ME, dis=dis_Me_2030)[0]
+df['NPV_Bd_2030'] = NPV(con=df['consumption_Biodiesel_(tonnes)'], aprice=Bd_price_2030, capex=CAPEX_Bd, dis=dis_Bd_2030)[0]
+df['NPV_H2_2030'] = NPV(con=df['consumption_Hydrogen_(tonnes)'], aprice=H2_price_2030, capex=CAPEX_H2, dis=dis_H2_2030)[0]
 
 # Selection the largest NPV value as alternative fuel
 conditions = [
@@ -87,8 +102,8 @@ con_sum_2030 = con_LSFO_2030+con_LNG_2030+con_Me_2030+con_Bd_2030+con_H2_2030
 
 # Energy consumption
 energy_2030, main_output_2030 = energy_con(con_base=con_LSFO_2030, con_lng=con_LNG_2030)
-print('Energy consumption 2030 ', energy_2030)
-print('Energy main engine output 2030', main_output_2030)
+print('Energy consumption 2030: ', energy_2030)
+print('Energy main engine output 2030: ', main_output_2030)
 
 # CO2 emission
 emi_LSFO_2030 = (df['Ship_2030']*df['consumption_LSFO_(tonnes)']*3.114)[df['Selection_2030'] == 'LSFO'].sum() + \
@@ -101,14 +116,14 @@ emi_sum_2030 = emi_LSFO_2030+emi_LNG_2030+emi_Me_2030+emi_Bd_2030+emi_H2_2030
 
 ########################################################################################################################
 
-df['NPV_LNG_2050'] = NPV(con=df['consumption_LNG_(tonnes)'], capex=CAPEX_LNG, dis=0.75, bprice=MGO_price_2050, c=1.1,
-                         aprice=LNG_price_2050)[0]
-df['NPV_Me_2050'] = NPV(con=df['consumption_Methanol_(tonnes)'], capex=CAPEX_ME, dis=0.75, bprice=MGO_price_2050, c=1.1,
-                        aprice=Me_price_2050)[0]
-df['NPV_Bd_2050'] = NPV(con=df['consumption_Biodiesel_(tonnes)'], capex=CAPEX_Bd, dis=1.0, bprice=MGO_price_2050, c=1.1
-                        , aprice=Bd_price_2050)[0]
-df['NPV_H2_2050'] = NPV(con=df['consumption_Hydrogen_(tonnes)'], capex=CAPEX_H2, dis=0.4, bprice=MGO_price_2050, c=1.1,
-                        aprice=H2_price_2050)[0]
+df['NPV_LNG_2050'] = NPV(con=df['consumption_LNG_(tonnes)'], capex=CAPEX_LNG, dis=dis_LNG_2050, bprice=MGO_price_2050,
+                         c=carbon_price, aprice=LNG_price_2050)[0]
+df['NPV_Me_2050'] = NPV(con=df['consumption_Methanol_(tonnes)'], capex=CAPEX_ME, dis=dis_Me_2050, bprice=MGO_price_2050,
+                        c=carbon_price, aprice=Me_price_2050)[0]
+df['NPV_Bd_2050'] = NPV(con=df['consumption_Biodiesel_(tonnes)'], capex=CAPEX_Bd, dis=dis_Bd_2050, bprice=MGO_price_2050,
+                        c=carbon_price, aprice=Bd_price_2050)[0]
+df['NPV_H2_2050'] = NPV(con=df['consumption_Hydrogen_(tonnes)'], capex=CAPEX_H2, dis=dis_H2_2050, bprice=MGO_price_2050,
+                        c=carbon_price, aprice=H2_price_2050)[0]
 
 # Selection the largest NPV value as alternative fuel
 conditions = [
@@ -141,8 +156,8 @@ con_sum_2050 = con_MGO_2050+con_LNG_2050+con_Me_2050+con_Bd_2050+con_H2_2050
 # energy consumption 2050
 energy_2050, main_output_2050 = energy_con(con_base=con_MGO_2050, con_lng=con_LNG_2050, con_bd=con_Bd_2050,
                                            con_h2=con_H2_2050, con_me=con_Me_2050, bncv=42.8)
-print('Energy consumption 2050 ', energy_2050)
-print('Energy main engine output 2050', main_output_2050)
+print('Energy consumption 2050: ', energy_2050)
+print('Energy main engine output 2050: ', main_output_2050)
 
 # CO2 emission
 emi_LSFO_2050 = (df['Ship_2050']*df['consumption_LSFO_(tonnes)']*3.206)[df['Selection_2050'] == 'MGO'].sum()\
