@@ -81,8 +81,6 @@ df['Selection_2030'] = np.select(conditions, choices_2030)
 df['NPV_2030'] = df[['NPV_LNG_2030', 'NPV_Me_2030', 'NPV_Bd_2030', 'NPV_H2_2030']].max(axis=1)
 df.loc[df.NPV_2030 <= 0, 'Selection_2030'] = 'LSFO'
 
-print(df[['Ship_type', 'Size_category', 'Selection_2030']])
-
 # Ship numbers
 num_LSFO_2030 = df['Ship_2030'][df['Selection_2030'] == 'LSFO'].sum()+df['Ship_2030_ex'].sum()+other_num  # new+ex+other
 num_LNG_2030 = df['Ship_2030'][df['Selection_2030'] == 'LNG'].sum()
@@ -102,8 +100,8 @@ con_sum_2030 = con_LSFO_2030+con_LNG_2030+con_Me_2030+con_Bd_2030+con_H2_2030
 
 # Energy consumption
 energy_2030, main_output_2030 = energy_con(con_base=con_LSFO_2030, con_lng=con_LNG_2030)
-print('Energy consumption 2030: ', energy_2030)
-print('Energy main engine output 2030: ', main_output_2030)
+print('Energy consumption 2030(PJ): ', energy_2030)
+print('Energy main engine output 2030(PJ): ', main_output_2030)
 
 # CO2 emission
 emi_LSFO_2030 = (df['Ship_2030']*df['consumption_LSFO_(tonnes)']*3.114)[df['Selection_2030'] == 'LSFO'].sum() + \
@@ -135,7 +133,9 @@ choices_2050 = ['LNG', 'Methanol', 'Biodiesel', 'Hydrogen']
 df['Selection_2050'] = np.select(conditions, choices_2050)
 df['NPV_2050'] = df[['NPV_LNG_2050', 'NPV_Me_2050', 'NPV_Bd_2050', 'NPV_H2_2050']].max(axis=1)
 df.loc[df.NPV_2050 <= 0, 'Selection_2050'] = 'MGO'
-print(df[['Ship_type', 'Size_category', 'Selection_2050']])
+
+# print(df[['Ship_type', 'Size_category', 'Selection_2030']])
+# print(df[['Ship_type', 'Size_category', 'Selection_2050']])
 
 # Ship numbers
 num_LSFO_2050 = df['Ship_2050'][df['Selection_2050'] == 'MGO'].sum()+other_num
@@ -156,8 +156,8 @@ con_sum_2050 = con_MGO_2050+con_LNG_2050+con_Me_2050+con_Bd_2050+con_H2_2050
 # energy consumption 2050
 energy_2050, main_output_2050 = energy_con(con_base=con_MGO_2050, con_lng=con_LNG_2050, con_bd=con_Bd_2050,
                                            con_h2=con_H2_2050, con_me=con_Me_2050, bncv=42.8)
-print('Energy consumption 2050: ', energy_2050)
-print('Energy main engine output 2050: ', main_output_2050)
+print('Energy consumption 2050(PJ): ', energy_2050)
+print('Energy main engine output 2050(PJ): ', main_output_2050)
 
 # CO2 emission
 emi_LSFO_2050 = (df['Ship_2050']*df['consumption_LSFO_(tonnes)']*3.206)[df['Selection_2050'] == 'MGO'].sum()\
@@ -167,14 +167,16 @@ emi_Me_2050 = (df['Ship_2050']*df['consumption_Methanol_(tonnes)']*1.370)[df['Se
 emi_Bd_2050 = (df['Ship_2050']*df['consumption_Biodiesel_(tonnes)']*3.114*0.2)[df['Selection_2050'] == 'Biodiesel'].sum()
 emi_H2_2050 = (df['Ship_2050']*df['consumption_Hydrogen_(tonnes)']*0)[df['Selection_2050'] == 'Hydrogen'].sum()
 emi_sum_2050 = emi_LSFO_2050+emi_LNG_2050+emi_Me_2050+emi_Bd_2050+emi_H2_2050
-print('emission in 2030  '+"%.0f" % round(emi_sum_2030*10**-6, 0))
-print('emission in 2050  '+"%.0f" % round(emi_sum_2050*10**-6, 0))
+print('fuel consumption in 2030(MT): '+"%.0f" % round(con_sum_2030*10**-6, 0))
+print('fuel consumption in 2050(MT): '+"%.0f" % round(con_sum_2050*10**-6, 0))
+print('emission in 2030(MT): '+"%.0f" % round(emi_sum_2030*10**-6, 0))
+print('emission in 2050(MT): '+"%.0f" % round(emi_sum_2050*10**-6, 0))
 
 # offset calculation
 cprice = NPV(con=df['consumption_LNG_(tonnes)'], capex=CAPEX_LNG, dis=0.75, bprice=MGO_price_2050, c=1.1,
              aprice=LNG_price_2050)[1]
 offset = con_MGO_2050*MGO_price_2050*(cprice-1)*percent_revenue/10.23  # unit ton offset price 10.23 $/ton
-print('emission in 2050 with offset  '+"%.0f" % round((emi_sum_2050-offset)*10**-6, 0))
+print('emission in 2050 with offset(MT): '+"%.0f" % round((emi_sum_2050-offset)*10**-6, 0))
 
 ########################################################################################################################
 # Plot section
